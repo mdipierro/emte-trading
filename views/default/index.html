@@ -13,14 +13,14 @@ This trading system is incompatible with your browser. Try <a href="http://www.g
 
 <h2>Welcome to {{=response.title}}</h2>
 
-<h3>Pescara is a complete trading system which includes:</h3>
+<h3>EMTE is a complete trading system which includes:</h3>
 <ul>
   <li>A matching engine that supports multiple products/securities</li>
   <li>A web-based trading platform</li>
   <li>A web-based management interface</li>
   <li>Asynchronous quote delivary machanism</li>
 </ul>
-<h3>Pescara supports:</h3>
+<h3>EMTE supports:</h3>
 <ul>
   <li>Market orders</li>
   <li>Limit Orders</li>
@@ -29,14 +29,14 @@ This trading system is incompatible with your browser. Try <a href="http://www.g
   <li>Order cancellation</li>
 </ul>
 
-<h3>Pescara is designed to be fast, scalable and secure.</h3>
+<h3>EMTE is designed to be fast, scalable and secure.</h3>
 <p>
-Pescara is a multi-tier system built on top of the web2py web framework, the tornado asynchronous web server and the new HTML5 WebSockets. It can run with any of the following databases: SQLite, PostgreSQL, MySQL, MSSQL, FireBird, Oracle, IBM DB2, Informix, Ingres, and Google App Engine.
+EMTE is a multi-tier system built on top of the web2py web framework, the tornado asynchronous web server and the new HTML5 WebSockets. It can run with any of the following databases: SQLite, PostgreSQL, MySQL, MSSQL, FireBird, Oracle, IBM DB2, Informix, Ingres, and Google App Engine.
 </p>
 <p>
 At its core it consists of a small and fast matching engine which receives orders synchronously and orderly, performs matches, and delivers information (quotes, matches, internal status) asynchrounously using HTML5 WebSockets, and logs all the events. Unfulfilled orders are stored in memory for speed. Each matching engine process handles one and only one product and runs off its osn port, for scalability reasons. One can run multiple instances to handle multiple concurrent products on a single machine or a distributed networks.
 <p>
-Pescara's outer tier is the trading platform. It is a minimalist platform but it can be easily customized to add features. It lists tradable products, create new ones (for managers only), builds orders, recaives quotes and other info from the inner layer.
+EMTE's outer tier is the trading platform. It is a minimalist platform but it can be easily customized to add features. It lists tradable products, create new ones (for managers only), builds orders, recaives quotes and other info from the inner layer.
 </p>
 Users must register (multiple registration mechanisms are allowed, including username/password, LDAP, CAS, OpenID, Oauth, Janrain), login and they are authenticated by the web interface. The orders submitted by authenticated users are pre-processed by the web server (validated, logged) and send to the matching engine digitally signed for extra security. The digital signature is based on the HMAC algorithm and the key is only shared by the web-server and the matching engine, never comminicated to clients who instead use an independent mechanism to estabilish sessions (based on server-side sessions and uuid cookies).
 </p>
