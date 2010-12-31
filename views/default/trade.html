@@ -1,25 +1,13 @@
 {{response.files.append(URL('static','js/processing-1.0.0.min.js'))}}
 {{response.files.append(URL('static','js/processing.init.js'))}}
 {{extend 'layout.html'}}
-
-  <script type="text/javascript" charset="utf-8">
-    var received_data={};
+<script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
-      if ("WebSocket" in window) {
-         var ws = new WebSocket("ws://127.0.0.1:8888/realtime/");
-         ws.onopen = function() {};
-         ws.onmessage = function (evt) {
-           var received_msg = evt.data;
-           // var html = $("#log").html();
-           // html = received_msg+html;
-           received_data = eval('('+received_msg+')');
-        };
-        ws.onclose = function() {};
-      } else {
-        alert("WebSocket not supported");
-      }
+       var received_data={};
+       if(!web2py_comet("{{=product.ws_url}}",function(e){received_data=eval('('+e.data+')');}))
+          alert("WebSocket not supported");
     });
-  </script>
+</script>
 
 <h2>Product: {{=product.name}}</h2>
 
