@@ -1,0 +1,12 @@
+1) start web2py
+2) start one process per product on their own port (must patch port in db)
+
+   cd applications/trading/modules/
+   python matchingserver.py -p 8888 intc
+
+3) start log2db deamon (one per product)
+
+   python web2py.py -S trading -N -M -R applications/trading/modules/log2db.py -A intc
+   
+rationale, decouples the job of logging to db from the job of logging to file
+

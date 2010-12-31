@@ -1,0 +1,41 @@
+{{extend 'layout.html'}}
+
+<h2>Actual Cash Balance: ${{=user.actual_cash}}</h2>
+
+<h2>Available Cash: ${{=user.virtual_cash}}</h2>
+
+<h2>Completed Trades</h2>
+
+<table>
+  <tr>
+    <th>Time</th>
+    <th>Quantity Buy</th>
+    <th>Quantity Sell</th>
+    <th>Price</th> 
+    <th>Total Shares</th>
+    <th>Balance</th>
+  </tr>{{shares,balance=0,0.0}}
+{{for row in rows:}}
+  <tr>
+    <td>{{=row.created_on}}</td>
+    <td>{{=row.quantity if row.buyer==auth.user.id else ''}}</td>
+    <td>{{=row.quantity if row.seller==auth.user.id else ''}}</td>
+    <td>{{='%.2f' % row.price}}</td>
+    {{delta=(row.quantity if row.buyer==auth.user.id else 0)-(row.quantity if row.seller==auth.user.id else 0)}}
+    {{shares+=delta}}
+    {{balance-=row.price*delta}}
+    <td>{{=shares}}</td>
+    <td>{{=balance+shares*row.price}}</td>
+  </tr>
+{{pass}}
+  <tr>
+    <th>NOW</th>
+    <th></th>
+    <th></th>
+    <th>{{=quote}}</th>
+    <th>{{=shares}}</th>
+    <th>{{=balance+shares*quote}}</th>
+  </tr>
+</table>
+
+<h2>Amout Spent: ${{=balance}}</h2>

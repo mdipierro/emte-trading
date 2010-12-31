@@ -1,0 +1,58 @@
+{{extend 'layout.html'}}
+
+<script>
+$(document).ready(function(){
+   $('.warning').hide();
+   if(!("WebSocket" in window)) $('.warning').fadeIn();
+});
+</script>
+
+<center><div class="warning" style="width:90%; text-align:center; background:red; color:white; padding:10px">
+This trading system is incompatible with your browser. Try <a href="http://www.google.com/chrome">Google Chrome</a> instead!
+</div></center>
+
+<h2>Welcome to {{=response.title}}</h2>
+
+<h3>Pescara is a complete trading system which includes:</h3>
+<ul>
+  <li>A matching engine that supports multiple products/securities</li>
+  <li>A web-based trading platform</li>
+  <li>A web-based management interface</li>
+  <li>Asynchronous quote delivary machanism</li>
+</ul>
+<h3>Pescara supports:</h3>
+<ul>
+  <li>Market orders</li>
+  <li>Limit Orders</li>
+  <li>Stop Orders (market and limits)</li>
+  <li>Partial fills</li>
+  <li>Order cancellation</li>
+</ul>
+
+<h3>Pescara is designed to be fast, scalable and secure.</h3>
+<p>
+Pescara is a multi-tier system built on top of the web2py web framework, the tornado asynchronous web server and the new HTML5 WebSockets. It can run with any of the following databases: SQLite, PostgreSQL, MySQL, MSSQL, FireBird, Oracle, IBM DB2, Informix, Ingres, and Google App Engine.
+</p>
+<p>
+At its core it consists of a small and fast matching engine which receives orders synchronously and orderly, performs matches, and delivers information (quotes, matches, internal status) asynchrounously using HTML5 WebSockets, and logs all the events. Unfulfilled orders are stored in memory for speed. Each matching engine process handles one and only one product and runs off its osn port, for scalability reasons. One can run multiple instances to handle multiple concurrent products on a single machine or a distributed networks.
+<p>
+Pescara's outer tier is the trading platform. It is a minimalist platform but it can be easily customized to add features. It lists tradable products, create new ones (for managers only), builds orders, recaives quotes and other info from the inner layer.
+</p>
+Users must register (multiple registration mechanisms are allowed, including username/password, LDAP, CAS, OpenID, Oauth, Janrain), login and they are authenticated by the web interface. The orders submitted by authenticated users are pre-processed by the web server (validated, logged) and send to the matching engine digitally signed for extra security. The digital signature is based on the HMAC algorithm and the key is only shared by the web-server and the matching engine, never comminicated to clients who instead use an independent mechanism to estabilish sessions (based on server-side sessions and uuid cookies).
+</p>
+<p>
+While the maching engine only receives order from the web-server, the quotes and maches are communicated directly to the web clients via HTML5 WebSockets, as well as logged to file.
+</p>
+<p>
+A third process monitors log files for changes and stores new events (matches, deleted orders, partial fills) into the database.
+</p>
+<p>
+The web interface communicate with the database for historical information.
+</p>
+<p>
+The system is very scalable because it has no single point of failure and every part can be replictated: for example one can run one matching engine for each product, one can run multiple web-servers behind a local balancer, and one can run a client-server database.
+</p>
+<p>
+The matching engine takes less then 1ms to process/match one order and about 1ms to update each client about new orders. Our estimates indicate that this system can handle on one single server up to 1000 connected clients trading the same product and still process each order in less than 1second. Better performance can be achieved with a larger distributed architecture.
+</p>
+

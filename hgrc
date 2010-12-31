@@ -1,0 +1,7 @@
+[paths]
+default = https://mdipierro%%40cs.depaul.edu:QP3zn8wn7wH9@emte-trading.googlecode.com/hg/
+
+[auth]
+default.prefix = https://emte-trading.googlecode.com/hg/
+default.username = mdipierro@cs.depaul.edu
+default.password = QP3zn8wn7wH9

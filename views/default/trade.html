@@ -1,0 +1,233 @@
+{{response.files.append(URL('static','js/processing-1.0.0.min.js'))}}
+{{response.files.append(URL('static','js/processing.init.js'))}}
+{{extend 'layout.html'}}
+
+  <script type="text/javascript" charset="utf-8">
+    var received_data={};
+    $(document).ready(function(){
+      if ("WebSocket" in window) {
+         var ws = new WebSocket("ws://127.0.0.1:8888/realtime/");
+         ws.onopen = function() {};
+         ws.onmessage = function (evt) {
+           var received_msg = evt.data;
+           // var html = $("#log").html();
+           // html = received_msg+html;
+           received_data = eval('('+received_msg+')');
+        };
+        ws.onclose = function() {};
+      } else {
+        alert("WebSocket not supported");
+      }
+    });
+  </script>
+
+<h2>Product: {{=product.name}}</h2>
+
+{{=A('P&L',_href=URL('pandl',args=product.id),_target="pandl")}}
+
+<center>
+<script type="application/processing">
+// Global variables  
+float radius = 50.0;  
+int X, Y;  
+int nX = 0;
+int nY = 0;  
+int delay = 16;  
+int width=800;
+int height=400;
+int height2=height-40;  
+int xscale=3;
+int yscale=0.25;
+var matches = [];
+var mine = {};
+int oid = [];
+var state = null;
+var box = 180;
+// Setup the Processing Canvas  
+void setup(){  
+  size( width, height );  
+  strokeWeight( 1 );  
+  frameRate( 15 );  
+}  
+void buy(p,q,o,me) {
+     if(me) {
+        strokeWeight(1);
+        stroke(255,255,255);
+        fill(255,0,0,90);
+        ellipse(xscale*p, height2+15,10,20);
+        fill(100,255,100,o);
+        mine[xscale*p]=me;
+     } else {
+        fill(0,255,0,o);
+        noStroke();
+     }
+     rect(xscale*p-4, height2-yscale*q,8,yscale*q);
+  }
+void sell(p,q,o,me) {
+     if(me) {
+        strokeWeight(1);
+        stroke(255,255,255);
+        fill(255,0,0,90);
+        ellipse(xscale*p, height2+15,10,20);
+        fill(255,100,100,o);
+        mine[xscale*p]=me;
+     } else {
+        fill(255,0,0,o);
+        noStroke();
+     }
+     rect(xscale*p-4, height2-yscale*q,8,yscale*q);
+  }
+void match(p,q,i) {
+     fill(255,255,255,255-5*i);
+     ellipse(xscale*p,height2-yscale*q,25-i/2,25-i/2);
+     if(i==0) {
+       fill(0,0,255,255);
+       ellipse(xscale*p,height2-yscale*q,20,20);
+       stroke(0,0,255);
+       line(xscale*p,height2-yscale*q,xscale*p+100,25);
+       fill(255,255,255);
+       textSize(24);
+       text(''+q+' at '+p.toFixed(2),xscale*p+100,25);
+     }
+}
+void draw(){      
+  mine = [];
+  background(0,0,0);  
+  fill( 0, 121, 184 );  
+  stroke(255,255,255);
+  line(0,height2,width,height2);
+  fill(255,255,255);
+  line(5,5,5+box,5);
+  line(5+box,5,5+box,5+box);
+  line(5+box,5+box,5,5+box);
+  line(5,5+box,5,5);
+  textSize(16);
+  if(state=="buy market") fill(0,255,0); else fill(255,255,255); 
+  text("buy market",30,200);
+  rect(10,190,10,10);
+  if(state=="buy limit") fill(0,255,0); else fill(255,255,255); 
+  text("buy limit",30,220);
+  rect(10,210,10,10);
+  if(state=="buy stop market") fill(0,255,0); else fill(255,255,255); 
+  text("buy stop market",30,240);
+  rect(10,230,10,10);
+  if(state=="buy stop limit") fill(0,255,0); else fill(255,255,255); 
+  text("buy stop limit",30,260);
+  rect(10,250,10,10);
+  if(state=="sell market") fill(255,0,0); else fill(255,255,255); 
+  text("sell market",30,280);
+  rect(10,270,10,10);
+  if(state=="sell limit") fill(255,0,0); else fill(255,255,255); 
+  text("sell limit",30,300);
+  rect(10,290,10,10);
+  if(state=="sell stop market") fill(255,0,0); else fill(255,255,255); 
+  text("sell stop market",30,320);
+  rect(10,310,10,10);
+  if(state=="sell stop limit") fill(255,0,0); else fill(255,255,255); 
+  text("sell stop limit",30,340);
+  rect(10,330,10,10);
+  noStroke();
+  try {
+     var price = received_data['state']['price'];
+     var d=width/(price*2);
+     xscale+=(d-xscale)/100;
+     var x=received_data['state']['mo_buy'];
+     var quantity=0;
+     for(int i=0; i<x.length; i++) quantity+=x[i]['quantity'];
+     buy(price, quantity, 255, false);
+     for(int i=0; i<x.length; i++) if(x[i]['owner']=={{=auth.user.id}})
+       buy(price, x[i]['quantity'], 255, x[i]['oid']);
+     var x=received_data['state']['mo_sell'];
+     quantity=0;
+     for(int i=0; i<x.length; i++) quantity+=x[i]['quantity'];
+     sell(price, quantity, 255, false);
+     for(int i=0; i<x.length; i++) if(x[i]['owner']=={{=auth.user.id}})
+       sell(price, x[i]['quantity'], 255, x[i]['oid']);
+  } catch(e) {};
+  try {
+     var x=received_data['state']['lo_buy'];
+     for(int i=0; i<x.length; i++)
+        buy(x[i]['price'],x[i]['quantity'],90,(x[i]['owner']=={{=auth.user.id}})?(x[i]['oid']):false);
+  } catch(e) {};
+  try {
+     var x=received_data['state']['lo_sell'];
+     for(int i=0; i<x.length; i++)       
+        sell(x[i]['price'], x[i]['quantity'],90,(x[i]['owner']=={{=auth.user.id}})?(x[i]['oid']):false);
+  } catch(e) {};
+  strokeWeight(4);			     
+  try {
+     var new_oid=received_data['oid'];
+     if(oid!=new_oid) {
+        var x=received_data['matches'];
+        for(int i=0; i<x.length; i++) { matches.push(x[i]['price']); matches.push(x[i]['quantity']); };
+        oid = new_oid;
+     }			
+     stroke(255,255,255);
+     strokeWeight(1);
+     for(int i=49; i>=0; i--) {        
+        var j =matches.length/2-i-1;
+        if(j<0) continue;
+        match(matches[2*j],matches[2*j+1],i);
+        d=5+box/2;
+        f=1.0/xscale/width*box;  
+        if(i>0)
+          line(5+box-box/50*i,d-matches[2*j+1]*f,5+box-box/50*(i-1),d-matches[2*j+3]*f);
+     }
+  } catch(e) {};
+  if(mouseY<height2 && mouseX>40) {
+    strokeWeight(1);
+    stroke(255,255,255,155);
+    line(0,mouseY,width,mouseY);
+    line(mouseX,0,mouseX,height2);     
+    fill(255,255,255);
+    textSize(24);
+    text(''+((height2-mouseY)/yscale)+' at '+(mouseX/xscale).toFixed(2),mouseX,mouseY);
+  }
+}    
+void mousePressed() {
+  if(mouseY>height2) {
+     for(var x in mine) if(abs(mouseX-x)<5) {
+        $.post('{{=URL('delete')}}','product='+{{=product.id}}+'&oid='+mine[x]);
+        break;
+     }
+  } else if(mouseX>10 && mouseX<20) {
+     if(mouseY>190 && mouseY<200) state="buy market";
+     else if(mouseY>210 && mouseY<220) state="buy limit";
+     else if(mouseY>230 && mouseY<240) state="buy stop market";
+     else if(mouseY>250 && mouseY<260) state="buy stop limit";
+     else if(mouseY>270 && mouseY<280) state="sell market";
+     else if(mouseY>290 && mouseY<300) state="sell limit";
+     else if(mouseY>310 && mouseY<320) state="sell stop market";
+     else if(mouseY>330 && mouseY<340) state="sell stop limit";
+     else state=null;			       
+  } else if(state!=null) {
+     nX = mouseX;
+  }
+}
+void mouseReleased() {
+  if(mouseY<height2 && mouseX>100 && state!=null) {
+     var quantity=(height2-mouseY)/yscale;
+     var price = (mouseX/xscale).toFixed(2);
+     var stop = (nX/xscale).toFixed(2); 
+     var data;
+     if(state=='buy market')
+       data = 'type=buy&product='+{{=product.id}}+'&quantity='+quantity;
+     else if(state=='sell market')
+       data = 'type=sell&product='+{{=product.id}}+'&quantity='+quantity;
+     else if(state=='buy limit')
+       data ='type=buy&product='+{{=product.id}}+'&quantity='+quantity+'&price='+price;
+     else if(state=='sell limit')
+       data ='type=sell&product='+{{=product.id}}+'&quantity='+quantity+'&price='+price;
+     else if(state=='buy stop market')
+       data ='type=buy&product='+{{=product.id}}+'&quantity='+quantity+'&stop='+stop;
+     else if(state=='sell stop market')
+       data ='type=sell&product='+{{=product.id}}+'&quantity='+quantity+'&stop='+stop;
+     else if(state=='buy stop limit')
+       data ='type=buy&product='+{{=product.id}}+'&quantity='+quantity+'&price='+price+'&stop='+stop;
+     else if(state=='sell stop limit')
+       data ='type=sell&product='+{{=product.id}}+'&quantity='+quantity+'&price='+price+'&stop='+stop;
+     $.post('{{=URL('order')}}',data);
+  }
+}
+</script><canvas width="800px" height="400px"></canvas></center>
+
