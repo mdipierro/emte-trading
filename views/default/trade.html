@@ -2,11 +2,14 @@
 {{response.files.append(URL('static','js/processing.init.js'))}}
 {{extend 'layout.html'}}
 <script type="text/javascript" charset="utf-8">
-    $(document).ready(function(){
-       var received_data={};
-       if(!web2py_comet("{{=product.ws_url}}",function(e){received_data=eval('('+e.data+')');}))
-          alert("WebSocket not supported");
-    });
+  var received_data=null;
+  $(document).ready(function(){
+    received_data={};
+    if(!web2py_comet("{{=product.ws_url}}",function(e){
+       received_data=eval('('+e.data+')');
+    }))
+    alert("WebSocket not supported");
+  });
 </script>
 
 <h2>Product: {{=product.name}}</h2>
@@ -131,7 +134,7 @@ void draw(){
      sell(price, quantity, 255, false);
      for(int i=0; i<x.length; i++) if(x[i]['owner']=={{=auth.user.id}})
        sell(price, x[i]['quantity'], 255, x[i]['oid']);
-  } catch(e) {};
+  } catch(e) {console.log(e);};
   try {
      var x=received_data['state']['lo_buy'];
      for(int i=0; i<x.length; i++)

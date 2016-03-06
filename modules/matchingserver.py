@@ -194,7 +194,16 @@ TEMPLATE = """
 
 LISTENERS = []
 
-class OrderHandler(tornado.web.RequestHandler):
+class BasicHandler(tornado.web.RequestHandler):
+    def check_origin(self, origin):
+        return True
+
+
+class BasicWebsocketHandler(tornado.websocket.WebSocketHandler):
+    def check_origin(self, origin):
+        return True
+
+class OrderHandler(BasicHandler):
     def get(self):
         try:
             self.post() ### for benchmarks            
@@ -215,15 +224,15 @@ class OrderHandler(tornado.web.RequestHandler):
                 for client in LISTENERS: client.write_message(message)
                 self.write(str(oid))
                 
-class QuoteHandler(tornado.web.RequestHandler):
+class QuoteHandler(BasicHandler):
     def get(self):
         self.write(str(engine.price))
 
-class QueryHandler(tornado.web.RequestHandler):
+class QueryHandler(BasicHandler):
     def get(self):        
         self.write(repr(engine.state()))
 
-class RealtimeHandler(tornado.websocket.WebSocketHandler):
+class RealtimeHandler(BasicWebsocketHandler):
     def open(self):
         LISTENERS.append(self)
         print 'client connected via websocket'
@@ -255,9 +264,9 @@ if __name__ == "__main__":
         (r'/', OrderHandler),
         (r'/quote', QuoteHandler),
         (r'/query', QueryHandler),
-        (r'/realtime/', RealtimeHandler)]
+        (r'/realtime', RealtimeHandler)]
     engine = Engine(options.ticker)
     application = tornado.web.Application(urls, auto_reload=True)
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(int(options.port))
-    tornado.ioloop.IOLoop.instance().start()
+    tornado.ioloop.IOLoop.current().start()
