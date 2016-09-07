@@ -3,3 +3,4 @@ sessions/
 **/*.log*
 **/*.idx
 **/#*#
+errors/

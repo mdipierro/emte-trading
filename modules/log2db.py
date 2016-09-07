@@ -1,3 +1,6 @@
+"""
+Logs ticket for financial product in seperate file.
+"""
 import sys, os, re, time, datetime
 
 ticker=sys.argv[1]
@@ -16,7 +19,7 @@ except IOError:
 
 data = ''
 while True:
-    watcher = os.stat(filename)    
+    watcher = os.stat(filename)
     j=watcher.st_size
     if j>i:
         file=open(filename,'rb')
