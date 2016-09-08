@@ -3,4 +3,5 @@ sessions/
 **/*.log*
 **/*.idx
 **/#*#
+**/*.pyc
 errors/

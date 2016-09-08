@@ -17,6 +17,18 @@ import simplejson
 (TYPE,QUANTITY,PRICE,STOP,OID,OWNER,TIMESTAMP) = ('type','quantity','price','stop','oid','owner','timestamp')
 
 def prettyprint(oid,order,matches,state):
+    """"
+    formats the order message
+
+    :param str oid: the id from order of user
+    :param str order: order from user
+    :param list matches: the list of orders that are fullfiled
+    :param list state: list of order type
+
+    :return: the message of order type, and order quantity at a bid/ask price
+    :rtype: str
+    """
+
     message = '[%s] from user %s\n' % (oid, order)
     message +=  '    quotes: '+' '.join('%(quantity)s@%(price)s' % m for m in matches)+'\n'
     for ell in ('mo_buy','mo_sell','lo_buy','lo_sell'):
@@ -25,9 +37,10 @@ def prettyprint(oid,order,matches,state):
         message += '    '+ell+': '+' '.join('%(quantity)s@%(price)s/%(stop)s' % x for x in state[ell])+'\n'
     return message
 
-class Engine:    
+class Engine:
     """
-    example of usage
+    :Example:
+
     >>> engine = Engine('intc')
     >>> user = 1
     >>> oid,matches = engine.process('1:buy intc 1',user)         # market order
@@ -35,11 +48,20 @@ class Engine:
     >>> oid,matches = engine.process('3:buy intc 1@50.6/49',user) # stop order
     >>> engine.process('3:del intc %s' % oid, user)               # delete order
     >>> for match in matches: print match['quantity'], match['price'], match['buyer'], match['seller']
+
     """
 
     re_order = re.compile('^((?P<o>\d+):)?(?P<t>(buy|sell|del))( (?P<n>[_a-z]+))? (?P<q>\d+)(\@(?P<p>\d+(\.\d+)?))?(/(?P<s>\d+(\.\d+)?))?$')
 
+
     def __init__(self,ticker,price=100.0,logfilename=None):
+        """
+        creates instance assosicate with the Engine class
+
+        :param str ticker: the security ticker symbol
+        :param float price: the security price (optional)
+        :param str logfilename: the name of the logfile (optional)
+        """
         self.logfile = open(logfilename or ticker+'.log','a')
         self.price = price  # initial trading price of securities
         self.ticker = ticker
@@ -52,12 +74,24 @@ class Engine:
         self.so_sell = [] # queue of sell stop orders (for single security)
 
     def state(self):
+        """
+        :return: the dictionary that clone the current state of Engine instance
+        :rtype: dict
+        """
         return dict(price=self.price,oid=self.oid,
                     mo_buy=self.mo_buy,mo_sell=self.mo_sell,
                     lo_buy=self.lo_buy,lo_sell=self.lo_sell,
                     so_buy=self.so_buy,so_sell=self.so_sell)
 
     def process(self, order_text):
+        """
+        processes order from order queue
+
+        :param str order_text: the string in format '<order id>:<buy|sell|del> <security ticker> <quantity>@<price>',<user>'
+
+        :return: order id and list of matched order
+        :rtype: tuple
+        """
         t0=time.time()
         # parse order. owner is the id of the order submitter
         match = self.re_order.match(order_text)
@@ -86,19 +120,37 @@ class Engine:
         order = dict(type=type,quantity=number,price=price,stop=stop,
                      oid=self.oid,owner=owner,timestamp=t0)
         self.logfile.write('%(timestamp)f: [%(oid)s] %(owner)s %(type)s %(quantity)s@%(price)s/%(stop)s\n' % order)
-        # this functions inserts o and sorts elements
+
         def insert(queue,order,key,sign=1):
+            """
+            inserts order and sorts elements.
+
+            :param list queue: the order queue
+            :param dict order: the order submitted by user
+            :param str key: the key in order
+            :param int sign: value of 1 indicates increasing, value of -1 indicates dedcresing in order quantity
+            """
             i,value = len(queue)-1,order[key]*sign
             while i>=0:
                 if queue[i][key]*sign >= value: break
                 i -= 1
             queue.insert(i+1,order)
+
         # append it to proper queue
         if stop: insert(so_buy,order,STOP,1) if type == 'buy' else insert(so_sell,order,STOP,-1)
         elif price: insert(lo_buy,order,PRICE,1) if type == 'buy' else insert(lo_sell,order,PRICE,-1)
         else: mo_buy.append(order) if type == 'buy' else mo_sell.append(order)
-        # this function can match orders from two give queues (bo,so)
+
         def match(bo,so):
+            """
+            matches orders from two give queues (bo,so), the transaction is taken place.
+
+            :param list bo: the list of buy orders
+            :param list so: the list of sell order
+
+            :return: matched order
+            :rtype: dict
+            """
             # get older orders
             b,s = bo[0],so[0]
             # find matching price
@@ -119,7 +171,9 @@ class Engine:
             else: so[0].update({QUANTITY:s[QUANTITY]-matched_quantity})
             # return match
             return match
+
         matches, possible_matches = [], True
+
         def get(s,k): return s == [] and 1e100 or s[0][k]
         # loop until there are no macthes to perform
         while possible_matches:
@@ -194,19 +248,10 @@ TEMPLATE = """
 
 LISTENERS = []
 
-class BasicHandler(tornado.web.RequestHandler):
-    def check_origin(self, origin):
-        return True
-
-
-class BasicWebsocketHandler(tornado.websocket.WebSocketHandler):
-    def check_origin(self, origin):
-        return True
-
-class OrderHandler(BasicHandler):
+class OrderHandler(tornado.web.RequestHandler):
     def get(self):
         try:
-            self.post() ### for benchmarks            
+            self.post() ### for benchmarks
         except: pass
         self.write(TEMPLATE % dict(ticker=engine.ticker))
 
@@ -223,16 +268,19 @@ class OrderHandler(BasicHandler):
                 message = repr({'oid':oid,'order':order,'state':engine.state(),'matches':matches})
                 for client in LISTENERS: client.write_message(message)
                 self.write(str(oid))
-                
-class QuoteHandler(BasicHandler):
+
+class QuoteHandler(tornado.web.RequestHandler):
     def get(self):
         self.write(str(engine.price))
 
-class QueryHandler(BasicHandler):
-    def get(self):        
+class QueryHandler(tornado.web.RequestHandler):
+    def get(self):
         self.write(repr(engine.state()))
 
-class RealtimeHandler(BasicWebsocketHandler):
+class RealtimeHandler(tornado.websocket.WebSocketHandler):
+    def check_origin(self, origin):
+        return True
+
     def open(self):
         LISTENERS.append(self)
         print 'client connected via websocket'
