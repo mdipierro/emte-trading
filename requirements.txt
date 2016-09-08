@@ -1,0 +1,9 @@
+backports-abc==0.4
+certifi==2016.8.31
+gitdb==0.6.4
+GitPython==2.0.8
+simplejson==3.8.2
+singledispatch==3.4.0.3
+six==1.10.0
+smmap==0.9.0
+tornado==4.4.1
