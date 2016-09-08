@@ -39,19 +39,21 @@ def prettyprint(oid,order,matches,state):
 
 class Engine:
     """
-    :Example:
+    Matches orders of single security
 
-    >>> engine = Engine('intc')
-    >>> user = 1
-    >>> oid,matches = engine.process('1:buy intc 1',user)         # market order
-    >>> oid,matches = engine.process('2:buy intc 1@50.6',user)    # limit order
-    >>> oid,matches = engine.process('3:buy intc 1@50.6/49',user) # stop order
-    >>> engine.process('3:del intc %s' % oid, user)               # delete order
-    >>> for match in matches: print match['quantity'], match['price'], match['buyer'], match['seller']
+    Example usage::
+
+        >>> engine = Engine('intc')
+        >>> user = 1
+        >>> oid,matches = engine.process('1:buy intc 1',user)         # market order
+        >>> oid,matches = engine.process('2:buy intc 1@50.6',user)    # limit order
+        >>> oid,matches = engine.process('3:buy intc 1@50.6/49',user) # stop order
+        >>> engine.process('3:del intc %s' % oid, user)               # delete order
+        >>> for match in matches: print match['quantity'], match['price'], match['buyer'], match['seller']
 
     """
 
-    re_order = re.compile('^((?P<o>\d+):)?(?P<t>(buy|sell|del))( (?P<n>[_a-z]+))? (?P<q>\d+)(\@(?P<p>\d+(\.\d+)?))?(/(?P<s>\d+(\.\d+)?))?$')
+    # re_order = re.compile('^((?P<o>\d+):)?(?P<t>(buy|sell|del))( (?P<n>[_a-z]+))? (?P<q>\d+)(\@(?P<p>\d+(\.\d+)?))?(/(?P<s>\d+(\.\d+)?))?$')
 
 
     def __init__(self,ticker,price=100.0,logfilename=None):
@@ -72,9 +74,13 @@ class Engine:
         self.lo_sell = [] # queue of sell limit orders (for single security)
         self.so_buy = []  # queue of buy stop orders (for single security)
         self.so_sell = [] # queue of sell stop orders (for single security)
+        self.re_order = re.compile('^((?P<o>\d+):)?(?P<t>(buy|sell|del))( (?P<n>[_a-z]+))? (?P<q>\d+)(\@(?P<p>\d+(\.\d+)?))?(/(?P<s>\d+(\.\d+)?))?$')
+
 
     def state(self):
         """
+        Clones current state of engine object
+
         :return: the dictionary that clone the current state of Engine instance
         :rtype: dict
         """
@@ -143,7 +149,7 @@ class Engine:
 
         def match(bo,so):
             """
-            matches orders from two give queues (bo,so), the transaction is taken place.
+            matches orders from two give queues (bo,so).
 
             :param list bo: the list of buy orders
             :param list so: the list of sell order
@@ -246,16 +252,19 @@ TEMPLATE = """
 </html>
 """
 
-LISTENERS = []
+LISTENERS = [] # queue of WebSocketHandler objects
 
 class OrderHandler(tornado.web.RequestHandler):
+    """ Hanles orders from clients  """
     def get(self):
+        """ Handles GET request, sends back a POST form """
         try:
             self.post() ### for benchmarks
         except: pass
         self.write(TEMPLATE % dict(ticker=engine.ticker))
 
     def post(self):
+        """ Handles POST request, proceses order then sends message to client """
         if hmac_key and not 'signature' in self.request.arguments: return
         if 'order' in self.request.arguments:
             order = self.request.arguments['order'][0].strip()
@@ -270,25 +279,43 @@ class OrderHandler(tornado.web.RequestHandler):
                 self.write(str(oid))
 
 class QuoteHandler(tornado.web.RequestHandler):
+    """ Handler to send quote price to clients  """
     def get(self):
+        """Handles GET request, sends back ticker price"""
         self.write(str(engine.price))
 
 class QueryHandler(tornado.web.RequestHandler):
+    """ Handler to sends current information of the security """
+
     def get(self):
+        """Sends current state of the engine"""
         self.write(repr(engine.state()))
 
 class RealtimeHandler(tornado.websocket.WebSocketHandler):
+    """ a Websocket handler to communicate with clients using Websocket protocol """
+
     def check_origin(self, origin):
+        """
+        Accepts all cross-origin traffic
+        :param origin: is the value of the ``Origin`` HTTP header, the url responsible for initiating this request.
+        .. seealso:: `~WebSocketHandler.check_origin <http://www.tornadoweb.org/en/stable/_modules/tornado/websocket.html#WebSocketHandler.check_origin>`
+        """
         return True
 
     def open(self):
+        """ Adds RealtimeHandler instance to the queue when new websocket is connected"""
         LISTENERS.append(self)
         print 'client connected via websocket'
 
     def on_message(self, message):
+        """
+        Handle incoming messages on the WebSocket
+        :param str message: the message to response
+        """
         pass
 
     def on_close(self):
+        """ remove RealtimeHandler instance when websocket is closed """
         LISTENERS.remove(self)
         print 'client disconnected'
 
