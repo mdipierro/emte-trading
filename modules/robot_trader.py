@@ -3,7 +3,7 @@ import random, hmac, urllib, time, optparse
 def robot_order(price,owner='1,2'):
     """
     submits buy and sell orders randomly
-    * Order price is fluctuated around quote price
+    Order price is fluctuated around quote price
 
     :param float price: The price gotten back from QuoteHandler.get
     :param str owner: a group/individual owner. Default is random owner
