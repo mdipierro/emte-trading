@@ -64,7 +64,7 @@ class Engine:
         :param float price: the security price (optional)
         :param str logfilename: the name of the logfile (optional)
         """
-        self.logfile = open(logfilename or ticker+'.log','a')
+        self.logfile = open(logfilename or ticker+'.log','a+')
         self.price = price  # initial trading price of securities
         self.ticker = ticker
         self.oid = 0
@@ -334,13 +334,17 @@ if __name__ == "__main__":
                       default='intc',
                       dest='ticker',
                       help='ticker name')
+    parser.add_option('-f',
+                      '--filename',
+                      dest='logfilename',
+                      help='logfile name')
     (options, args) = parser.parse_args()
     urls=[
         (r'/', OrderHandler),
         (r'/quote', QuoteHandler),
         (r'/query', QueryHandler),
         (r'/realtime', RealtimeHandler)]
-    engine = Engine(options.ticker)
+    engine = Engine(ticker=options.ticker,logfilename=options.logfilename)
     application = tornado.web.Application(urls, auto_reload=True)
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(int(options.port))

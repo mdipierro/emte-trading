@@ -18,8 +18,13 @@ except IOError:
     i=0
 
 data = ''
+watcher=None
 while True:
-    watcher = os.stat(filename)
+    try:
+        watcher = os.stat(filename)
+    except:
+        time.sleep(1)
+        continue
     j=watcher.st_size
     if j>i:
         file=open(filename,'rb')

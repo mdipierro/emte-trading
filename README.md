@@ -24,16 +24,16 @@ __*(Exchange Matching and Trading Engine)*__
   The example below assumed that all tickers symbol is already stored in the database. 
  
   ```
-  cd applications/emte_trading/modules/
+  cd applications/emte/modules/
   ```
 		
   Each ticker is associated with different port number. 
 		
   ```
-  python matchingserver.py -p 8888 intc
+  python matchingserver.py -p 8888 -t intc
   ```
   ```
-  python matchingserver.py -p 8880 gs
+  python matchingserver.py -p 8880 -t gs
   ```
 
 **3.** *Start  log2db deamon (one per product)*
@@ -42,7 +42,7 @@ __*(Exchange Matching and Trading Engine)*__
   
 
   ```
-  python web2py.py -S trading  -M -R applications/trading/modules/log2db.py -A intc
+  python web2py.py -S emte  -M -R applications/emte/modules/log2db.py -A intc
   ```
 - - -
 
