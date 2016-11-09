@@ -108,12 +108,12 @@ __*(Exchange Matching and Trading Engine)*__
 
 **3. Demo trading (Optional)**
 
-The demo.py in  modules directory can be run to register manager, traders, stock, and submit order. To log in and view the simulation, the password is also the username.
+The **demo.py** in  modules directory can be run to register manager, traders, stock, and submit order. To log in and view the simulation, the password is also the username.
 
 Run demo.py in web2py directory
 
 ```
-python web2py.py -S <app name> -M -R applications/<app name>/module/demo.py
+python web2py.py -S <app name> -M -R applications/<app name>/modules/demo.py
 ```
 
 To make sure all matching server and robot trader running process is close,
