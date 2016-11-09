@@ -106,7 +106,7 @@ __*(Exchange Matching and Trading Engine)*__
 
  [For more information](https://vimeo.com/18282084)
 
-**3. Demo trading (Optional) **
+**3. Demo trading (Optional)**
 
 The demo.py in  modules directory can be run to register manager, traders, stock, and submit order. To log in and view the simulation, the password is also the username.
 
